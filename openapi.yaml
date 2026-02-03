@@ -1,2655 +1,1195 @@
-openapi: 3.0.2
+openapi: 3.0.0
+
 info:
   title: Public API
-  version: 2.0.0
+  version: 2.0.1
   description: MasterDelivery Public API
+
+servers:
+  - url: https://backend.md-dev.ru
+    description: dev-server
+
 security:
   - bearerAuth: []
-servers:
-  - url: https://backend.md-dev.ru/public
-    description: dev-server
+
 tags:
   - name: orders
-    description: Операции по заказам (Orders)
+    description: Операции по заказам
+
   - name: places
-    description: Операции с Торговыми Точками (Places)
-  - name: places/blocks
-    description: Операции с Блокировками доставки торговых точек (Places Blocks)
+    description: Операции с торговыми точками
+
+  - name: places/block
+    description: Блокировки торговых точек
+
   - name: places/areas
-    description: Операции по Зонам доставки торговых точек (Places Areas)
+    description: Зоны доставки торговых точек
+
   - name: places/schedule
-    description: Операции по расписаниям Времени работы торговых точек (Places Schedule)
+    description: Расписание работы торговых точек
+
   - name: merchant/schedule
-    description: Операции по расписаниям Времени работы Мерчанта (Merchant Schedule)
+    description: Расписание работы мерчанта
 
 paths:
-  /v1/merchant/places/block:
+  /public/v2/orders/:
     post:
-      tags:
-        - places/blocks
-      summary: Заблокировать доставку для ТТ
-      description: Блокировка доставки из торговых точек мерчантом
-      operationId: places_block_public_v1_merchant_places_block_post
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlaceBlockInRequest'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                title: Response Places Block Public V1 Merchant Places Block Post
-                type: array
-                items:
-                  $ref: '#/components/schemas/PlaceBlockInResponse'
-        '400':
-          description: Bad Request — неверные place_ids или block_ids
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden — неверный API ключ
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Validation Error — пустые или отсутствующие поля
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/merchant/places/unblock:
-    post:
-      tags:
-        - places/blocks
-      summary: Разблокировать доставку для ТТ
-      description: Разблокировка доставки из торговых точек мерчантом
-      operationId: places_unblock_public_v1_merchant_places_unblock_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlaceUnBlockInRequest'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                title: Response Places Unblock Public V1 Merchant Places Unblock  Post
-                type: array
-                items:
-                  $ref: '#/components/schemas/PlaceBlockInResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /public/v1/merchant/places/blocks/:
-    get:
-      tags:
-        - places/blocks
-      summary: Получение списка блокировок ТТ
-      description: Получение списка действующих и неактивных блокировок доставки из торговых точек.
-      operationId: places_blocks_public_v1_merchant_places_blocks__get
+      tags: [orders]
+      summary: Public:Create Order
+      description: Создание заказа.
+      operationId: public_create_order_public_v2_orders_post
       parameters:
-        - required: false
-          schema:
-            title: Place Ids
-            type: array
-            items:
-              type: string
-              format: uuid
-          name: place_ids
-          in: query
-        - description: Отдавать ли заблокированные точки
-          required: false
-          schema:
-            title: Show Disabled
-            type: boolean
-            description: Отдавать ли заблокированные точки
-          name: show_disabled
-          in: query
-        - required: false
-          schema:
-            title: Limit
-            type: integer
-            default: '500'
-          name: limit
-          in: query
-        - required: false
-          schema:
-            title: Offset
-            type: integer
-            default: '0'
-          name: offset
-          in: query
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                title: Response Places Blocks Public V1 Merchant Places Blocks  Get
-                type: array
-                items:
-                  $ref: '#/components/schemas/PlaceBlockInResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/merchant/places:
-    get:
-      tags:
-        # - PUBLIC
-        - places
-      summary: Получение списка ТТ
-      description: Получение списка торговых точек и их параметров
-      operationId: public_places_list_public_v1_merchant_places_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                title: Response Public Places List Public V1 Merchant Places Get
-                type: array
-                items:
-                  $ref: '#/components/schemas/PlaceInDB'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    post:
-      tags:
-        # - PUBLIC
-        - places
-      summary: Создание новой ТТ
-      description: Создание новой Торговой Точки
-      operationId: places_create_public_v1_merchant_places_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlaceWithArea'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlaceInDB'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/merchant/places/{place_id}:
-    get:
-      tags:
-        - places
-      summary: Получение параметров ТТ по place_id
-      description: Получение параметров Торговой Точки по идентификатору
-      operationId: public_places_get_public_v1_merchant_places__place_id__get
-      parameters:
-        - required: true
-          schema:
-            title: Place Id
-            type: string
-            format: uuid
-          name: place_id
-          in: path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlaceInDB'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    put:
-      tags:
-        - places
-      summary: Изменение параметров ТТ по place_id
-      description: Изменение параметров Торговой Точки по идентификатору
-      operationId: places_update_public_v1_merchant_places__place_id__put
-      parameters:
-        - required: true
-          schema:
-            title: Place Id
-            type: string
-            format: uuid
-          name: place_id
-          in: path
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlaceUpdate'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlaceInDB'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/merchant/places/order-check/:
-    post:
-      tags:
-        - places
-        - orders
-      summary: Проверка связи гео-точка -- торговая точка
-      description: |-
-        Проверка принадлежности гео-точки зоне доставки Торговой Точки и возможности создания заказа, получение прогнозного времени доставки. В ответ возвращается список доступных для оформления заказа Торговых точек по гео-точке с текущими параметрами Торговой Точки.
-        Возможные сценарии использования:
-        - проверка возможности доставки и получение ее параметров на момент запроса;
-        - определение ТТ для дальнейшего создания заказа
-      operationId: places_order_check_public_v1_merchant_places_order_check__post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrderCheckInRequest'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlaceAccessList'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/merchant/places/{place_id}/schedule:
-    get:
-      tags:
-        - places/schedule
-      summary: Получение расписания Времени Работы ТТ
-      description: Получение расписания Времени Работы доставки Торговой Точки по идентификатору
-      operationId: place_schedule_get_public_v1_merchant_places__place_id__schedule_get
-      parameters:
-        - required: true
-          schema:
-            title: Place Id
-            type: string
-            format: uuid
-          name: place_id
-          in: path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkTimes'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    put:
-      tags:
-        - places/schedule
-      summary: Установление расписания Времени Работы ТТ
-      description: Установление расписания Времени Работы доставки Торговой Точки по идентификатору
-      operationId: public_place_schedule_update_public_v1_merchant_places__place_id__schedule_put
-      parameters:
-        - required: true
-          schema:
-            title: Place Id
-            type: string
-            format: uuid
-          name: place_id
-          in: path
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkTimesUpdate'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkTimes'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/merchant/places/areas/:
-    post:
-      tags:
-        - places/areas
-      summary: Создание/изменение зон доставки для ТТ
-      description: Создать или изменить зоны доставки для Торговой Точки
-      operationId: public_areas_create_public_v1_merchant_places_areas__post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AreaCreatePublic'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AreaInResponsePublic'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/merchant/places/{merchant_place_id}/area/:
-    get:
-      tags:
-        - places/areas
-      summary: Получение зоны доставки ТТ по merchant_place_id
-      description: Получить зону доставки для Торговой Точки мерчанта по индентификатору системы мерчанта (merchant_place_id)
-      operationId: public_areas_retrieve_public_v1_merchant_places__merchant_place_id__area__get
-      parameters:
-        - required: true
-          schema:
-            title: Merchant Place Id
-            type: string
-          name: merchant_place_id
-          in: path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AreaInResponsePublic'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/merchant/{merchant_id}/schedule:
-    get:
-      tags:
-        - merchant/schedule
-      summary: Получение расписания Времени Работы Мерчанта
-      description: Получение расписания Времени Работы доставки Мерчанта
-      operationId: merchant_schedule_get_public_v1_merchant__merchant_id__schedule_get
-      parameters:
-        - required: true
-          schema:
-            title: Merchant Id
-            type: string
-            format: uuid
-          name: merchant_id
-          in: path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkTimes'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    put:
-      tags:
-        - merchant/schedule
-      summary: Установление расписания Времени Работы Мерчанта
-      description: Установление расписания Времени Работы доставки Мерчанта
-      operationId: merchant_schedule_update_public_v1_merchant__merchant_id__schedule_put
-      parameters:
-        - required: true
-          schema:
-            title: Merchant Id
-            type: string
-            format: uuid
-          name: merchant_id
-          in: path
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkTimesUpdate'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkTimes'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v2/orders/:
-    post:
-      tags:
-        - orders
-      summary: Создание заказа
-      description: |- 
-        Создание заказа по Торговой Точке. Для создания "срочного" заказа необходимо использовать параметр [is_force_start=true] и в таком случае параметр expected_time опционален. При отложенном заказе "ко времени" параметр [is_force_start] опционален, но обязателен параметр [expected_time].
-      operationId: public_create_order_public_v2_orders__post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateOrderInRequest'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderDetailForResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v2/orders/dry_run/:
-    post:
-      tags:
-        - orders
-      summary: Проверка возможности создания заказа
-      description: 'Проверка: возможно-ли создать заказ с текущими параметрами'
-      operationId: public_dry_run_public_v2_orders_dry_run__post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrderDryRun'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseSchemaResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v2/orders/{order_id}:
-    get:
-      tags:
-        - orders
-      summary: Получение данных заказа по order_id
-      description: Получить данные заказа по идентификатору заказа
-      operationId: public_get_order_public_v2_orders_order_id_get
-      parameters:
-        - name: order_id
-          in: path
+        - in: header
+          name: authorization
           required: true
           schema:
-            title: Order Id
             type: string
-            format: uuid
-        - name: is_external_id
-          in: query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDetailForResponse"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+  /public/v2/orders/dry_run/:
+    post:
+      tags: [orders]
+      summary: Public:Dry Run
+      description: "Проверка: возможно ли создать заказ."
+      operationId: public_dry_run_public_v2_orders_dry_run_post
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderDryRun"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseSchemaResponse"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+  /public/v2/orders/{order_id}/:
+    get:
+      tags: [orders]
+      summary: Public:Get Order
+      description: Получить данные заказа.
+      operationId: public_get_order_public_v2_orders_order_id_get
+      parameters:
+        - in: path
+          name: order_id
+          required: true
+          schema:
+            anyOf:
+              - type: string
+                format: uuid
+              - type: string
+        - in: query
+          name: is_external_id
           required: false
           schema:
-            title: Is External Id
             type: boolean
             default: false
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderDetailedForResponse'
-        '422':
+                $ref: "#/components/schemas/OrderDetailedForResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
+
     delete:
-      tags:
-        - orders
-      summary: Отмена заказа
+      tags: [orders]
+      summary: Public:Cancel Order
       description: Отмена заказа.
-      operationId: public_cancel_order_public_v2_orders__order_id______delete
+      operationId: public_cancel_order_public_v2_orders_order_id_delete
       parameters:
-        - required: true
-          schema:
-            title: Order Id
-            type: string
-            format: uuid
+        - in: path
           name: order_id
-          in: path
-        - required: false
+          required: true
           schema:
-            title: Is External Id
+            anyOf:
+              - type: string
+                format: uuid
+              - type: string
+        - in: query
+          name: is_external_id
+          required: false
+          schema:
             type: boolean
             default: false
-          name: is_external_id
-          in: query
-        - required: false
+        - in: header
+          name: authorization
+          required: true
           schema:
-            title: Cancel Code
             type: string
-          name: cancel_code
-          in: query
-        - required: false
-          schema:
-            title: Cancel Reason
-            type: string
-          name: cancel_reason
-          in: query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelOrderInRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
+
     patch:
-      tags:
-        - orders
-      summary: Обновление данных заказа
-      description: Обновление параметров заказа. Изменение географических параметров точек доставки (Торговая точки, точка доставки) невозможна.
+      tags: [orders]
+      summary: Public:Update Order
+      description: Обновление данных заказа.
       operationId: public_update_order_public_v2_orders_order_id_patch
       parameters:
-        - required: true
-          schema:
-            title: Order Id
-            type: string
-            format: uuid
+        - in: path
           name: order_id
-          in: path
-        - required: false
+          required: true
           schema:
-            title: Is External Id
+            anyOf:
+              - type: string
+                format: uuid
+              - type: string
+        - in: query
+          name: is_external_id
+          required: false
+          schema:
             type: boolean
             default: false
-          name: is_external_id
-          in: query
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateOrderInRequest'
-        required: true
+              $ref: "#/components/schemas/UpdateOrderInRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
-              schema: {}
-        '422':
+              schema:
+                $ref: "#/components/schemas/OrderDetailForResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v2/orders/{order_id}/return/:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+  /public/v2/orders/{order_id}/return/:
     patch:
-      tags:
-        - orders
-      summary: Возврат продуктов в заказе
-      description: Возврат продуктов в составе заказа. Метод доступен во время и после цикла доставки.
-      operationId: public_return_order_public_v2_orders__order_id__return__patch
+      tags: [orders]
+      summary: Public:Return Order
+      description: Возврат продуктов заказа.
+      operationId: public_return_order_public_v2_orders_order_id_return_patch
       parameters:
-        - required: true
-          schema:
-            title: Order Id
-            type: string
-            format: uuid
+        - in: path
           name: order_id
-          in: path
-        - required: false
+          required: true
           schema:
-            title: Is External Id
+            anyOf:
+              - type: string
+                format: uuid
+              - type: string
+        - in: query
+          name: is_external_id
+          required: false
+          schema:
             type: boolean
             default: false
-          name: is_external_id
-          in: query
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReturnProductsInRequest'
-        required: true
+              $ref: "#/components/schemas/ReturnProductsInRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v2/orders/{order_id}/tracking/:
+
+  /public/v2/orders/{order_id}/tracking/:
     get:
-      tags:
-        - orders
-      summary: Получение данных курьера по заказу
-      description: Получение данных курьера (контактные данные, геопозиция, номер транспорта). Метод доступен от момента назначения курьера, до финального статуса заказа (доставлен/отменен).
-      operationId: public_get_courier_position_public_v2_orders__order_id__tracking__get
+      tags: [orders]
+      summary: Public:Get Courier Position
+      operationId: public_get_courier_position_public_v2_orders_order_id_tracking_get
       parameters:
-        - required: true
-          schema:
-            title: Order Id
-            type: string
-            format: uuid
+        - in: path
           name: order_id
-          in: path
-        - required: false
+          required: true
           schema:
-            title: Is External Id
+            anyOf:
+              - type: string
+                format: uuid
+              - type: string
+        - in: query
+          name: is_external_id
+          required: false
+          schema:
             type: boolean
             default: false
-          name: is_external_id
-          in: query
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublicCourierPositionForResponse'
-        '422':
-          description: Validation Error
+                $ref: "#/components/schemas/PublicCourierPositionForResponse"
+
+  /public/v2/orders/{order_id}/state/:
+    post:
+      tags: [orders]
+      summary: Public:Create Merchant Order State
+      description: >
+        Принимает данные о статусе заказа от партнера и сохраняет их в БД
+        для последующей обработки.
+      operationId: public_create_merchant_order_state_public_v2_orders_order_id_state_post
+      parameters:
+        - in: path
+          name: order_id
+          required: true
+          schema:
+            anyOf:
+              - type: string
+                format: uuid
+              - type: string
+        - in: query
+          name: is_external_id
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MerchantOrderStateInRequest"
+      responses:
+        "200":
+          description: Successful Response
+
+  /public/v2/orders/route/:
+    post:
+      tags: [orders]
+      summary: Public:Create Batch Order
+      description: Создание группового заказа.
+      operationId: public_create_batch_order_public_v2_orders_route_post
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGroupOrderInRequest"
+      responses:
+        "200":
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v2/orders/{order_id}/state/:
-    post:
-      tags:
-        - orders
-      summary: Передача состояний заказа [start_processing, ready_to_pickup, order_picked_up]
-      description: |-
-        Принимает данные о состоянии заказа в системе партнера. 
-        Возможные значения:
-        - start_processing: заказ отправился в приготовление/сборку
-        - ready_to_pickup: заказ приготовлен/собран для выдаче курьеру
-        - order_picked_up: заказ был получен курьером
-      operationId: public_create_order_state_public_v2_orders__order_id__state__post
+                $ref: "#/components/schemas/GroupOrderDetailForResponse"
+
+  /public/v2/orders/route/{group_id}/:
+    get:
+      tags: [orders]
+      summary: Public:Get Batch Order
+      description: Получить данные группового заказа.
+      operationId: public_get_batch_order_public_v2_orders_route_group_id_get
       parameters:
-        - required: true
+        - in: path
+          name: group_id
+          required: true
           schema:
-            title: Order Id
             type: string
             format: uuid
-          name: order_id
-          in: path
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupOrderDetailedForResponse"
+
+    delete:
+      tags: [orders]
+      summary: Public:Cancel Batch Order
+      description: Отмена группового заказа.
+      operationId: public_cancel_batch_order_public_v2_orders_route_group_id_delete
+      parameters:
+        - in: path
+          name: group_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MerchantOrderStateInRequest'
-        required: true
+              $ref: "#/components/schemas/CancelOrderInRequest"
       responses:
-        '200':
+        "204":
+          description: Successful Response
+
+  /public/v1/merchant/places/order-check/:
+    post:
+      tags: [orders]
+      summary: Places:Order Check
+      description: >
+        Проверка возможности создания заказа на ТТ и определение времени,
+        требуемого на доставку.
+      operationId: places_order_check_public_v1_merchant_places_order_check_post
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderCheckInRequest"
+      responses:
+        "200":
           description: Successful Response
           content:
             application/json:
-              schema: {}
-        '422':
+              schema:
+                $ref: "#/components/schemas/PlaceAccessList"
+
+  /public/v1/merchant/places:
+    get:
+      tags: [places]
+      summary: Places:Get Places
+      description: Получить список торговых точек.
+      operationId: public_get_places_public_v1_merchant_places_get
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlaceInDB"
+
+    post:
+      tags: [places]
+      summary: Places:Create Place
+      description: Создать торговую точку.
+      operationId: public_create_place_public_v1_merchant_places_post
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceInDB"
+
+  /public/v1/merchant/places/{place_id}:
+    get:
+      tags: [places]
+      summary: Places:Get Place
+      description: Получить данные торговой точки.
+      operationId: public_get_place_public_v1_merchant_places_place_id_get
+      parameters:
+        - in: path
+          name: place_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceInDB"
+
+    put:
+      tags: [places]
+      summary: Places:Update Place
+      description: Обновить данные торговой точки.
+      operationId: public_update_place_public_v1_merchant_places_place_id_put
+      parameters:
+        - in: path
+          name: place_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceInDB"
+
+  /public/v1/merchant/places/block/:
+    post:
+      tags: [places/block]
+      summary: Places:Block Places
+      description: Заблокировать одну или несколько торговых точек.
+      operationId: public_block_places_public_v1_merchant_places_block_post
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MerchantPlaceBlockInRequest"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlaceBlockInResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-                
+                $ref: "#/components/schemas/HTTPValidationError"
+
+  /public/v1/merchant/places/unblock/:
+    post:
+      tags: [places/block]
+      summary: Places:Unblock Places
+      description: Разблокировать одну или несколько торговых точек.
+      operationId: public_unblock_places_public_v1_merchant_places_unblock_post
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                place_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                merchant_place_ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlaceBlockInResponse"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+  /public/v1/merchant/places/blocks/:
+    get:
+      tags: [places/block]
+      summary: Places:Get Blocks
+      description: Получить список блокировок торговых точек.
+      operationId: public_get_blocks_public_v1_merchant_places_blocks_get
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: place_id
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: merchant_place_id
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: is_active
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BlockInResponse"
+
+  /public/v1/merchant/places/areas/:
+    post:
+      tags: [places/areas]
+      summary: Places:Create Areas
+      description: Создать зоны доставки для торговых точек.
+      operationId: public_create_areas_public_v1_merchant_places_areas_post
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AreaCreatePublic"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AreaInResponsePublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+  /public/v1/merchant/places/{merchant_place_id}/area/:
+    get:
+      tags: [places/areas]
+      summary: Places:Get Area
+      description: Получить зоны доставки для конкретной торговой точки.
+      operationId: public_get_area_public_v1_merchant_places_merchant_place_id_area_get
+      parameters:
+        - in: path
+          name: merchant_place_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AreaInResponsePublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+  /public/v1/merchant/places/{place_id}/schedule:
+    get:
+      tags: [places/schedule]
+      summary: Places:Get Schedule
+      description: Получить расписание работы торговой точки.
+      operationId: public_get_place_schedule_public_v1_merchant_places_place_id_schedule_get
+      parameters:
+        - in: path
+          name: place_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkTimes"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+    put:
+      tags: [places/schedule]
+      summary: Places:Update Schedule
+      description: Обновить расписание работы торговой точки.
+      operationId: public_update_place_schedule_public_v1_merchant_places_place_id_schedule_put
+      parameters:
+        - in: path
+          name: place_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkTimesUpdate"
+      responses:
+        "200":
+          description: Successful Response
+
+  /public/v1/merchant/{merchant_id}/schedule:
+    get:
+      tags: [merchant/schedule]
+      summary: Merchant:Get Schedule
+      description: Получить расписание работы мерчанта.
+      operationId: public_get_merchant_schedule_public_v1_merchant_merchant_id_schedule_get
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkTimes"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+    put:
+      tags: [merchant/schedule]
+      summary: Merchant:Update Schedule
+      description: Обновить расписание работы мерчанта.
+      operationId: public_update_merchant_schedule_public_v1_merchant_merchant_id_schedule_put
+      parameters:
+        - in: path
+          name: merchant_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkTimesUpdate"
+      responses:
+        "200":
+          description: Successful Response
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
-    AdditionalServiceCodeNameOnly:
-      title: AdditionalServiceCodeNameOnly
-      type: object
-      properties:
-        code_name:
-          title: Code Name
-          type: string
-    AreaCreatePublic:
-      title: AreaCreatePublic
-      required:
-        - merchant_place_id
-        - zones
-      type: object
-      properties:
-        merchant_place_id:
-          title: Merchant Place Id
-          type: string
-        zones:
-          title: Zones
-          type: array
-          items:
-            $ref: '#/components/schemas/Zone'
-    AreaCreateWithoutPlace:
-      title: AreaCreateWithoutPlace
-      required:
-        - min_delivery_duration
-        - max_delivery_duration
-        - geometry
-      type: object
-      properties:
-        min_delivery_duration:
-          title: Min Delivery Duration
-          type: integer
-        max_delivery_duration:
-          title: Max Delivery Duration
-          type: integer
-        geometry:
-          title: Geometry
-          allOf:
-            - $ref: '#/components/schemas/JsonGeometry'
-          description: kml as geojson
-          example:
-            data:
-              type: Polygon
-              coordinates:
-                - - - '10'
-                    - '10'
-                  - - '20'
-                    - '10'
-                  - - '20'
-                    - '20'
-                  - - '10'
-                    - '20'
-                  - - '10'
-                    - '10'
-                - - - '15'
-                    - '15'
-                  - - '15'
-                    - '18'
-                  - - '18'
-                    - '18'
-                  - - '18'
-                    - '15'
-                  - - '15'
-                    - '15'
-    AreaInResponsePublic:
-      title: AreaInResponsePublic
-      required:
-        - merchant_place_id
-        - zones
-      type: object
-      properties:
-        merchant_place_id:
-          title: Merchant Place Id
-          type: string
-        zones:
-          title: Zones
-          type: array
-          items:
-            $ref: '#/components/schemas/Zone'
-    BaseSchemaResponse:
-      title: BaseSchemaResponse
-      type: object
-      properties: {}
-    BlockInDB:
-      title: BlockInDB
-      required:
-        - datetime_from
-        - initial_endless_block
-        - merchant_id
-        - id
-      type: object
-      properties:
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        city_id:
-          title: City Id
-          type: integer
-        is_blocked:
-          title: Is Blocked
-          type: boolean
-          default: 'true'
-        is_critical:
-          title: Is Critical
-          type: boolean
-          default: 'false'
-        datetime_from:
-          title: Datetime From
-          type: string
-          format: date-time
-        datetime_to:
-          title: Datetime To
-          type: string
-          format: date-time
-        block_reason:
-          title: Block Reason
-          type: string
-        extra_data:
-          title: Extra Data
-          type: object
-        available_to_unblock:
-          title: Available To Unblock
-          type: boolean
-        initial_endless_block:
-          title: Initial Endless Block
-          type: boolean
-        block_by_role:
-          title: Block By Role
-          type: string
-        block_by_user_id:
-          title: Block By User Id
-          type: string
-        unblock_by_role:
-          title: Unblock By Role
-          type: string
-        unblock_by_user_id:
-          title: Unblock By User Id
-          type: string
-        created_at:
-          title: Created At
-          type: string
-          format: date-time
-        updated_at:
-          title: Updated At
-          type: string
-          format: date-time
-        merchant_id:
-          title: Merchant Id
-          type: string
-          format: uuid
-        id:
-          title: Id
-          type: string
-          format: uuid
-      description: Блокировка мерчантов
-    BlockInResponse:
-      title: BlockInResponse
-      required:
-        - datetime_from
-        - initial_endless_block
-        - id
-      type: object
-      properties:
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        city_id:
-          title: City Id
-          type: integer
-        is_blocked:
-          title: Is Blocked
-          type: boolean
-          default: 'true'
-        is_critical:
-          title: Is Critical
-          type: boolean
-          default: 'false'
-        datetime_from:
-          title: Datetime From
-          type: string
-          format: date-time
-        datetime_to:
-          title: Datetime To
-          type: string
-          format: date-time
-        block_reason:
-          title: Block Reason
-          type: string
-        extra_data:
-          title: Extra Data
-          type: object
-        available_to_unblock:
-          title: Available To Unblock
-          type: boolean
-        initial_endless_block:
-          title: Initial Endless Block
-          type: boolean
-        block_by_role:
-          title: Block By Role
-          type: string
-        block_by_user_id:
-          title: Block By User Id
-          type: string
-        unblock_by_role:
-          title: Unblock By Role
-          type: string
-        unblock_by_user_id:
-          title: Unblock By User Id
-          type: string
-        created_at:
-          title: Created At
-          type: string
-          format: date-time
-        updated_at:
-          title: Updated At
-          type: string
-          format: date-time
-        id:
-          title: Id
-          type: string
-          format: uuid
-        service_id:
-          title: Service Id
-          type: string
-          format: uuid
-        service_name_code:
-          title: Service Name Code
-          type: string
-        merchant_id:
-          title: Merchant Id
-          type: string
-          format: uuid
-      description: Блокировка мерчантов
-    CancelOrderInRequest:
-      title: CancelOrderInRequest
-      type: object
-      properties:
-        status:
-          $ref: '#/components/schemas/OrderCancelState'
-        cancel_code:
-          $ref: '#/components/schemas/OrderCancelCodeEnum'
-        cancel_reason:
-          title: Cancel Reason
-          type: string
-    CostLevel:
-      title: CostLevel
-      required:
-        - cost
-        - minOrderAmount
-      type: object
-      properties:
-        cost:
-          title: Cost
-          type: integer
-        minOrderAmount:
-          title: Minorderamount
-          type: integer
-    CreateDeliveryInRequest:
-      title: CreateDeliveryInRequest
-      required:
-        - payment_method
-      type: object
-      properties:
-        expected_time:
-          title: Expected Time
-          type: string
-          format: date-time
-        expected_time_from:
-          title: Expected Time From
-          type: string
-          format: date-time
-        expected_time_to:
-          title: Expected Time To
-          type: string
-          format: date-time
-        recieved_time_from:
-          title: Recieved Time From
-          type: string
-          format: date-time
-        recieved_time_to:
-          title: Recieved Time To
-          type: string
-          format: date-time
-        payment_method:
-          $ref: '#/components/schemas/PaymentMethodEnum'
-        consumer_data:
-          title: Consumer Data
-          type: string
-        region:
-          title: Region
-          type: string
-          default: ''
-        street:
-          title: Street
-          type: string
-          default: ''
-        house_number:
-          title: House Number
-          type: string
-          default: ''
-        flat_number:
-          title: Flat Number
-          type: string
-        entrance:
-          title: Entrance
-          type: string
-        intercom:
-          title: Intercom
-          type: string
-        floor:
-          title: Floor
-          type: string
-        address:
-          title: Address
-          type: string
-        location:
-          $ref: '#/components/schemas/Point'
-        comment:
-          title: Comment
-          type: string
-        place_postcode:
-          title: Place Postcode
-          type: string
-        return_place_postcode:
-          title: Return Place Postcode
-          type: string
-        attributes:
-          $ref: '#/components/schemas/DeliveryAttributes'
-    CreateIngredientInRequest:
-      title: CreateIngredientInRequest
-      required:
-        - name
-        - price
-        - group_name
-      type: object
-      properties:
-        name:
-          title: Name
-          type: string
-        price:
-          title: Price
-          type: number
-        group_name:
-          title: Group Name
-          type: string
-        vat_code:
-          title: Vat Code
-          type: string
-        rkeeper_code:
-          title: Rkeeper Code
-          type: string
-        external_id:
-          title: External Id
-          type: string
-    CreateOrderInRequest:
-      title: CreateOrderInRequest
-      required:
-        - cost
-        - person_count
-        - products
-        - order_id
-        - customer
-        - delivery
-      type: object
-      properties:
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        merchant_place_id:
-         title: Merchant Place Id
-         type: string
-        cost:
-          $ref: '#/components/schemas/OrderCost'
-        person_count:
-          title: Person Count
-          type: integer
-        comment:
-          title: Comment
-          type: string
-        products:
-          title: Products
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateProductInRequest'
-        additional_services:
-          title: Additional Services
-          type: array
-          items:
-            $ref: '#/components/schemas/AdditionalServiceCodeNameOnly'
-        is_force_start:
-          title: Is Force Start
-          type: boolean
-          default: 'false'
-        dimension:
-          $ref: '#/components/schemas/Dimension'
-        id:
-          title: Id
-          type: string
-          format: uuid
-        order_id:
-          title: Order Id
-          type: string
-        customer:
-          $ref: '#/components/schemas/OrderCustomer'
-        delivery:
-          $ref: '#/components/schemas/CreateDeliveryInRequest'
-        normative:
-          title: Normative
-          type: object
-    CreateProductInRequest:
-      title: CreateProductInRequest
-      required:
-        - name
-        - quantity
-        - price
-        - total_price
-      type: object
-      properties:
-        name:
-          title: Name
-          type: string
-        quantity:
-          title: Quantity
-          type: integer
-        price:
-          title: Price
-          type: number
-        total_price:
-          title: Total Price
-          type: number
-        vat_code:
-          title: Vat Code
-          type: string
-        rkeeper_code:
-          title: Rkeeper Code
-          type: string
-        external_id:
-          title: External Id
-          type: string
-        ingredients:
-          title: Ingredients
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateIngredientInRequest'
-    DeliveryAttributes:
-      title: DeliveryAttributes
-      type: object
-      properties:
-        short_code:
-          title: Short Code
-          type: string
-        pin_code:
-          title: Pin Code
-          type: string
-        channel:
-          title: Channel
-          type: string
-        bank_transaction_id:
-          title: Bank Transaction Id
-          type: string
-    DeliveryDryRunInRequest:
-      title: DeliveryDryRunInRequest
-      required:
-        - consumer_data
-      type: object
-      properties:
-        expected_time:
-          title: Expected Time
-          type: string
-          format: date-time
-        consumer_data:
-          title: Consumer Data
-          type: string
-        region:
-          title: Region
-          type: string
-          default: ''
-        street:
-          title: Street
-          type: string
-          default: ''
-        house_number:
-          title: House Number
-          type: string
-          default: ''
-        flat_number:
-          title: Flat Number
-          type: string
-        entrance:
-          title: Entrance
-          type: string
-        intercom:
-          title: Intercom
-          type: string
-        floor:
-          title: Floor
-          type: string
-        address:
-          title: Address
-          type: string
-        location:
-          $ref: '#/components/schemas/Point'
-        comment:
-          title: Comment
-          type: string
-        place_postcode:
-          title: Place Postcode
-          type: string
-        return_place_postcode:
-          title: Return Place Postcode
-          type: string
-        attributes:
-          $ref: '#/components/schemas/DeliveryAttributes'
-    DeliveryTimeDelayInDB:
-      title: DeliveryTimeDelayInDB
-      required:
-        - reason
-        - datetime_from
-        - datetime_to
-        - delay
-        - id
-        - place_id
-        - is_active
-        - created_by_user_id
-        - created_at
-        - updated_at
-      type: object
-      properties:
-        reason:
-          title: Reason
-          type: string
-        datetime_from:
-          title: Datetime From
-          type: string
-          format: date-time
-        datetime_to:
-          title: Datetime To
-          type: string
-          format: date-time
-        delay:
-          title: Delay
-          type: integer
-        id:
-          title: Id
-          type: string
-          format: uuid
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        is_active:
-          title: Is Active
-          type: boolean
-        created_by_user_id:
-          title: Created By User Id
-          type: string
-        created_at:
-          title: Created At
-          type: string
-          format: date-time
-        updated_at:
-          title: Updated At
-          type: string
-          format: date-time
-    Dimension:
-      title: Dimension
-      type: object
-      properties:
-        height:
-          title: Height
-          type: number
-        width:
-          title: Width
-          type: number
-        length:
-          title: Length
-          type: number
-        weight:
-          title: Weight
-          type: number
-    FactResult:
-      title: FactResult
-      type: object
-      properties:
-        final_delivery_datetime:
-          title: Final Delivery Datetime
-          type: string
-          format: date-time
-        final_canceled_datetime:
-          title: Final Canceled Datetime
-          type: string
-          format: date-time
+
     HTTPValidationError:
-      title: HTTPValidationError
       type: object
       properties:
-        errors:
-          title: Errors
+        detail:
           type: array
           items:
-            $ref: '#/components/schemas/ValidationError'
-    IngredientForResponse:
-      title: IngredientForResponse
-      required:
-        - id
-        - name
-        - price
-        - group_name
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          format: uuid
-        name:
-          title: Name
-          type: string
-        price:
-          title: Price
-          type: number
-        group_name:
-          title: Group Name
-          type: string
-        vat_code:
-          title: Vat Code
-          type: string
-        rkeeper_code:
-          title: Rkeeper Code
-          type: string
-        external_id:
-          title: External Id
-          type: string
-    JsonGeometry:
-      title: JsonGeometry
-      required:
-        - data
-      type: object
-      properties:
-        data:
-          title: Data
-          type: object
-    MerchantOrderStateEnum:
-      title: MerchantOrderStateEnum
-      enum:
-        - start_processing
-        - ready_to_pickup
-        - order_picked_up
-      type: string
-      description: An enumeration.
-    MerchantOrderStateInRequest:
-      title: MerchantOrderStateInRequest
-      required:
-        - state
-      type: object
-      properties:
-        state:
-          $ref: '#/components/schemas/MerchantOrderStateEnum'
-    OrderCancelCodeEnum:
-      title: OrderCancelCodeEnum
-      enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        - 6
-        - 7
-        - 8
-        - 9
-        - 10
-        - 11
-        - 12
-        - 13
-        - 14
-        - 15
-        - 16
-        - 17
-        - 19
-        - 20
-        - 21
-        - 22
-        - 23
-        - 24
-        - 25
-        - 26
-        - 27
-        - 28
-        - 29
-        - 30
-        - 90
-      type: integer
-      description: Необходимо синхронизировать изменениях с моделью в миросервисе `orders-distribution`.
-    OrderCancelState:
-      title: OrderCancelState
-      enum:
-        - 103
-        - 501
-        - 502
-      type: integer
-      description: An enumeration.
-    OrderCheckInRequest:
-      title: OrderCheckInRequest
-      type: object
-      properties:
-        longitude:
-          title: Longitude
-          type: number
-        latitude:
-          title: Latitude
-          type: number
-        region:
-          title: Region
-          type: string
-        city_id:
-          title: City Id
-          type: integer
-        street:
-          title: Street
-          type: string
-        house_number:
-          title: House Number
-          type: string
-        flat_number:
-          title: Flat Number
-          type: string
-        entrance:
-          title: Entrance
-          type: string
-        intercom:
-          title: Intercom
-          type: string
-        floor:
-          title: Floor
-          type: string
-        pickup_time:
-          title: Pickup Time
-          type: string
-          format: date-time
-        channel:
-          title: Channel
-          type: string
-    OrderCost:
-      title: OrderCost
-      required:
-        - cost
-        - additional_cost
-      type: object
-      properties:
-        cost:
-          title: Cost
-          type: number
-        additional_cost:
-          title: Additional Cost
-          type: number
-        change_cost:
-          title: Change Cost
-          type: number
-    OrderCourier:
-      title: OrderCourier
-      required:
-        - id
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          format: uuid
-        name:
-          title: Name
-          type: string
-        phone:
-          title: Phone
-          type: string
-    OrderCustomer:
-      title: OrderCustomer
-      type: object
-      properties:
-        name:
-          title: Name
-          type: string
-        phone:
-          title: Phone
-          type: string
-        email:
-          title: Email
-          type: string
-    OrderDetailForResponse:
-      title: OrderDetailForResponse
-      required:
-        - id
-        - order_id
-        - merchant
-        - status
-        - payment_status
-        - cost
-        - customer
-        - person_count
-        - is_normative_exceeded
-        - is_force_start
-        - delivery
-        - created_at
-        - updated_at
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          format: uuid
-        order_id:
-          title: Order Id
-          type: string
-        merchant:
-          $ref: '#/components/schemas/OrderMerchant'
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        return_place:
-          $ref: '#/components/schemas/ReturnPlaceOrderInDB'
-        status:
-          $ref: '#/components/schemas/OrderStatusEnum'
-        payment_status:
-          $ref: '#/components/schemas/PaymentStatusEnum'
-        cost:
-          $ref: '#/components/schemas/OrderCost'
-        customer:
-          $ref: '#/components/schemas/OrderCustomer'
-        person_count:
-          title: Person Count
-          type: integer
-        is_normative_exceeded:
-          title: Is Normative Exceeded
-          type: boolean
-        comment:
-          title: Comment
-          type: string
-        cancel_code:
-          $ref: '#/components/schemas/OrderCancelCodeEnum'
-        cancel_reason:
-          title: Cancel Reason
-          type: string
-        is_force_start:
-          title: Is Force Start
-          type: boolean
-        delivery:
-          $ref: '#/components/schemas/PublicDeliveryForResponse'
-        products:
-          title: Products
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductForResponse'
-        dimension:
-          $ref: '#/components/schemas/Dimension'
-        created_at:
-          title: Created At
-          type: string
-          format: date-time
-        updated_at:
-          title: Updated At
-          type: string
-          format: date-time
-    OrderDetailedForResponse:
-      title: OrderDetailedForResponse
-      required:
-        - id
-        - order_id
-        - merchant
-        - status
-        - payment_status
-        - cost
-        - customer
-        - person_count
-        - is_normative_exceeded
-        - is_force_start
-        - delivery
-        - created_at
-        - updated_at
-        - suggested_time
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          format: uuid
-        order_id:
-          title: Order Id
-          type: string
-        merchant:
-          $ref: '#/components/schemas/OrderMerchant'
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        return_place:
-          $ref: '#/components/schemas/ReturnPlaceOrderInDB'
-        status:
-          $ref: '#/components/schemas/OrderStatusEnum'
-        payment_status:
-          $ref: '#/components/schemas/PaymentStatusEnum'
-        cost:
-          $ref: '#/components/schemas/OrderCost'
-        customer:
-          $ref: '#/components/schemas/OrderCustomer'
-        person_count:
-          title: Person Count
-          type: integer
-        is_normative_exceeded:
-          title: Is Normative Exceeded
-          type: boolean
-        comment:
-          title: Comment
-          type: string
-        cancel_code:
-          $ref: '#/components/schemas/OrderCancelCodeEnum'
-        cancel_reason:
-          title: Cancel Reason
-          type: string
-        is_force_start:
-          title: Is Force Start
-          type: boolean
-        delivery:
-          $ref: '#/components/schemas/PublicDeliveryForResponse'
-        products:
-          title: Products
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductForResponse'
-        dimension:
-          $ref: '#/components/schemas/Dimension'
-        created_at:
-          title: Created At
-          type: string
-          format: date-time
-        updated_at:
-          title: Updated At
-          type: string
-          format: date-time
-        group_id:
-          title: Group Id
-          type: string
-          format: uuid
-        courier:
-          $ref: '#/components/schemas/OrderCourier'
-        group_orders:
-          title: Group Orders
-          type: array
-          items:
-            $ref: '#/components/schemas/OrderMerchant'
-        notification_type:
-          title: Notification Type
-          type: integer
-        suggested_time:
-          title: Suggested Time
-          type: string
-          format: date-time
-        fact:
-          $ref: '#/components/schemas/FactResult'
-        courier_search_datetime:
-          title: Courier Search Datetime
-          type: string
-          format: date-time
-        courier_arrive_restaurant_datetime:
-          title: Courier Arrive Restaurant Datetime
-          type: string
-          format: date-time
-        courier_picking_up_order_datetime:
-          title: Courier Picking Up Order Datetime
-          type: string
-          format: date-time
-        courier_arrive_delivery_address_datetime:
-          title: Courier Arrive Delivery Address Datetime
-          type: string
-          format: date-time
-        courier_delivery_datetime:
-          title: Courier Delivery Datetime
-          type: string
-          format: date-time
-        delivery_expected_time:
-          title: Delivery Expected Time
-          type: string
-          format: date-time
-        time_to_cancel:
-          title: Time To Cancel
-          type: number
-        logistic_service:
-          title: Logistic Service
-          type: string
-    OrderDryRun:
-      title: OrderDryRun
-      required:
-        - cost
-        - person_count
-        - products
-        - delivery
-      type: object
-      properties:
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        cost:
-          $ref: '#/components/schemas/OrderCost'
-        person_count:
-          title: Person Count
-          type: integer
-        comment:
-          title: Comment
-          type: string
-        products:
-          title: Products
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateProductInRequest'
-        additional_services:
-          title: Additional Services
-          type: array
-          items:
-            $ref: '#/components/schemas/AdditionalServiceCodeNameOnly'
-        is_force_start:
-          title: Is Force Start
-          type: boolean
-          default: 'false'
-        dimension:
-          $ref: '#/components/schemas/Dimension'
-        delivery:
-          $ref: '#/components/schemas/DeliveryDryRunInRequest'
-    OrderMerchant:
-      title: OrderMerchant
-      required:
-        - id
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          format: uuid
-        name:
-          title: Name
-          type: string
-    OrderStatusEnum:
-      title: OrderStatusEnum
-      enum:
-        - 101
-        - 102
-        - 103
-        - 104
-        - 111
-        - 201
-        - 202
-        - 203
-        - 204
-        - 205
-        - 210
-        - 299
-        - 301
-        - 401
-        - 402
-        - 403
-        - 404
-        - 405
-        - 501
-        - 502
-        - 601
-        - 701
-      type: integer
-      description: Необходимо синхронизировать изменениях с моделью в миросервисе `orders-distribution`.
-    Passport:
-      title: Passport
-      required:
-        - series
-        - number
-      type: object
-      properties:
-        series:
-          title: Series
-          type: string
-        number:
-          title: Number
-          type: string
-    PaymentMethodEnum:
-      title: PaymentMethodEnum
-      enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-      type: integer
-      description: Необходимо синхронизировать изменениях с моделью в миросервисе `orders`.
-    PaymentStatusEnum:
-      title: PaymentStatusEnum
-      enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-      type: integer
-      description: Необходимо синхронизировать изменениях с моделью в миросервисе `orders-distribution`.
-    PlaceAccessForResponse:
-      title: PlaceAccessForResponse
-      required:
-        - id
-        - merchant_place_id
-        - status
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          format: uuid
-        merchant_place_id:
-          title: Merchant Place Id
-          type: string
-        pickup_time:
-          title: Pickup Time
-          type: string
-          format: date-time
-        interval_start:
-          title: Interval Start
-          type: string
-          format: date-time
-        interval_end:
-          title: Interval End
-          type: string
-          format: date-time
-        status:
-          title: Status
-          type: object
-        delivery_fee:
-          title: Delivery Fee
-          type: number
-        delivery_сost_levels:
-          title: Delivery Сost Levels
-          type: array
-          items:
-            anyOf:
-              - type: string
-                format: json-string
-              - type: object
-        surge_coefficient:
-          title: Surge Coefficient
-          type: integer
-    PlaceAccessList:
-      title: PlaceAccessList
-      required:
-        - is_access
-        - places
-      type: object
-      properties:
-        is_access:
-          title: Is Access
-          type: boolean
-        places:
-          title: Places
-          type: array
-          items:
-            $ref: '#/components/schemas/PlaceAccessForResponse'
-    PlaceBlockInRequest:
-      title: PlaceBlockInRequest
-      type: object
-      required:
-        - place_ids
-        - datetime_from
-        - datetime_to
-        - block_reason
-      properties:
-        place_ids:
-          title: Place Ids
-          type: array
-          items:
-            type: string
-            format: uuid
-        datetime_from:
-          title: Datetime From
-          type: string
-          format: date-time
-        datetime_to:
-          title: Datetime To
-          type: string
-          format: date-time
-        block_reason:
-          title: Block Reason
-          type: string
-        extra_data:
-          title: Extra Data
-          type: object
-          properties:
-            comment:
-              title: Comment
-              type: string
-            responsible:
-              title: Responsible
-              type: string        
-    PlaceBlockInResponse:
-      title: PlaceBlockInResponse
-      required:
-        - id
-        - place_id
-        - datetime_from
-        - is_blocked
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          format: uuid
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        datetime_from:
-          title: Datetime From
-          type: string
-          format: date-time
-        datetime_to:
-          title: Datetime To
-          type: string
-          format: date-time
-        block_reason:
-          title: Block Reason
-          type: string
-        is_blocked:
-          title: Is Blocked
-          type: boolean
-        initial_endless_block:
-          title: Initial Endless Block
-          type: boolean
-    ErrorResponse:
-      title: ErrorResponse
-      type: object
-      required:
-        - errors
-      properties:
-        errors:
-          title: Errors
-          type: array
-          items:
-            type: string
-      example:
-        errors:
-          - "Неверный API ключ"      
-    PlaceInDB:
-      title: PlaceInDB
-      required:
-        - location
-        - merchant_id
-        - merchant_place_id
-        - address
-        - name
-        - city_id
-        - id
-      type: object
-      properties:
-        location:
-          $ref: '#/components/schemas/Point'
-        merchant_id:
-          title: Merchant Id
-          type: string
-          format: uuid
-        merchant_place_id:
-          title: Merchant Place Id
-          type: string
-        address:
-          title: Address
-          type: string
-        name:
-          title: Name
-          type: string
-        city_id:
-          title: City Id
-          type: integer
-        postcode:
-          title: Postcode
-          type: string
-        email:
-          title: Email
-          type: string
-        orders_num_in_group:
-          title: Orders Num In Group
-          minimum: 1
-          type: integer
-          description: Количество заказов в группе при автоназначении
-        type_place:
-          $ref: '#/components/schemas/PlaceTypeEnum'
-        id:
-          title: Id
-          type: string
-          format: uuid
-        work_times:
-          $ref: '#/components/schemas/WorkTimes'
-        is_blocked:
-          title: Is Blocked
-          type: boolean
-          default: 'false'
-        block_info:
-          title: Block Info
-          anyOf:
-            - $ref: '#/components/schemas/BlockInDB'
-            - $ref: '#/components/schemas/BlockInResponse'
-        delay_info:
-          $ref: '#/components/schemas/DeliveryTimeDelayInDB'
-    PlaceTypeEnum:
-      title: PlaceTypeEnum
-      enum:
-        - FC
-        - IL
-      type: string
-      description: An enumeration.
-    PlaceUnBlockInRequest:
-      title: PlaceUnBlockInRequest
-      type: object
-      properties:
-        place_ids:
-          title: Place Ids
-          type: array
-          items:
-            type: string
-            format: uuid
-        block_ids:
-          title: Block Ids
-          type: array
-          items:
-            type: string
-            format: uuid
-    PlaceUpdate:
-      title: PlaceUpdate
-      type: object
-      properties:
-        location:
-          $ref: '#/components/schemas/Point'
-        address:
-          title: Address
-          type: string
-        name:
-          title: Name
-          type: string
-        city_id:
-          title: City Id
-          type: integer
-        postcode:
-          title: Postcode
-          type: string
-        email:
-          title: Email
-          type: string
-        merchant_place_id:
-          title: Merchant Place Id
-          type: string
-        orders_num_in_group:
-          title: Orders Num In Group
-          minimum: 1
-          type: integer
-          description: Количетсво заказов в группе при автоназначении
-        type_place:
-          $ref: '#/components/schemas/PlaceTypeEnum'
-    PlaceWithArea:
-      title: PlaceWithArea
-      required:
-        - location
-        - merchant_place_id
-        - address
-        - name
-        - city_id
-        - area
-      type: object
-      properties:
-        location:
-          $ref: '#/components/schemas/Point'
-        merchant_place_id:
-          title: Merchant Place Id
-          type: string
-        address:
-          title: Address
-          type: string
-        name:
-          title: Name
-          type: string
-        city_id:
-          title: City Id
-          type: integer
-        area:
-          $ref: '#/components/schemas/AreaCreateWithoutPlace'
-    Point:
-      title: Point
-      type: object
-      properties:
-        longitude:
-          title: Longitude
-          type: number
-        latitude:
-          title: Latitude
-          type: number
-    ProductForResponse:
-      title: ProductForResponse
-      required:
-        - id
-        - name
-        - quantity
-        - price
-        - total_price
-        - refund_quantity
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          format: uuid
-        name:
-          title: Name
-          type: string
-        quantity:
-          title: Quantity
-          type: integer
-        price:
-          title: Price
-          type: number
-        total_price:
-          title: Total Price
-          type: number
-        vat_code:
-          title: Vat Code
-          type: string
-        external_id:
-          title: External Id
-          type: string
-        rkeeper_code:
-          title: Rkeeper Code
-          type: string
-        refund_quantity:
-          title: Refund Quantity
-          type: integer
-        dimensions:
-          $ref: '#/components/schemas/Dimension'
-        ingredients:
-          title: Ingredients
-          type: array
-          items:
-            $ref: '#/components/schemas/IngredientForResponse'
-    PublicCourierPositionForResponse:
-      title: PublicCourierPositionForResponse
-      required:
-        - order_id
-        - courier_id
-        - order_status
-        - courier_name
-        - location
-      type: object
-      properties:
-        order_id:
-          title: Order Id
-          type: string
-          format: uuid
-        courier_id:
-          title: Courier Id
-          anyOf:
-            - type: string
-              format: uuid
-            - type: integer
-        order_status:
-          title: Order Status
-          type: string
-        courier_name:
-          title: Courier Name
-          type: string
-        phone_number:
-          title: Phone Number
-          type: string
-        location:
-          $ref: '#/components/schemas/Point'
-        passport:
-          $ref: '#/components/schemas/Passport'
-        vehicle:
-          $ref: '#/components/schemas/Vehicle'
-        eta_to_place:
-          title: Eta To Place
-          type: string
-    PublicDeliveryForResponse:
-      title: PublicDeliveryForResponse
-      type: object
-      properties:
-        expected_time:
-          title: Expected Time
-          type: string
-          format: date-time
-        expected_time_from:
-          title: Expected Time From
-          type: string
-          format: date-time
-        expected_time_to:
-          title: Expected Time To
-          type: string
-          format: date-time
-        recieved_time_from:
-          title: Recieved Time From
-          type: string
-          format: date-time
-        recieved_time_to:
-          title: Recieved Time To
-          type: string
-          format: date-time
-        payment_method:
-          $ref: '#/components/schemas/PaymentMethodEnum'
-        consumer_data:
-          title: Consumer Data
-          type: string
-        region:
-          title: Region
-          type: string
-        city_id:
-          title: City Id
-          type: integer
-        street:
-          title: Street
-          type: string
-        house_number:
-          title: House Number
-          type: string
-        flat_number:
-          title: Flat Number
-          type: string
-        entrance:
-          title: Entrance
-          type: string
-        intercom:
-          title: Intercom
-          type: string
-        floor:
-          title: Floor
-          type: string
-        location:
-          $ref: '#/components/schemas/Point'
-        comment:
-          title: Comment
-          type: string
-        attributes:
-          $ref: '#/components/schemas/DeliveryAttributes'
-    RegularSchedule:
-      title: RegularSchedule
-      required:
-        - week_day
-        - time_start
-        - time_end
-        - is_work
-        - sla_id
-        - merchant_id
-      type: object
-      properties:
-        week_day:
-          title: Week Day
-          maximum: 6
-          minimum: 0
-          type: integer
-        time_start:
-          title: Time Start
-          type: string
-          format: time
-        time_end:
-          title: Time End
-          type: string
-          format: time
-        is_work:
-          title: Is Work
-          type: boolean
-        sla_id:
-          title: Sla Id
-          type: string
-          format: uuid
-        merchant_id:
-          title: Merchant Id
-          type: string
-          format: uuid
-    RegularScheduleUpdate:
-      title: RegularScheduleUpdate
-      required:
-        - week_day
-        - time_start
-        - time_end
-        - is_work
-      type: object
-      properties:
-        week_day:
-          title: Week Day
-          maximum: 6
-          minimum: 0
-          type: integer
-        time_start:
-          title: Time Start
-          type: string
-          format: time
-        time_end:
-          title: Time End
-          type: string
-          format: time
-        is_work:
-          title: Is Work
-          type: boolean
-        sla_id:
-          title: Sla Id
-          type: string
-          format: uuid
-    ReturnPlaceOrderInDB:
-      title: ReturnPlaceOrderInDB
-      required:
-        - name
-        - location
-      type: object
-      properties:
-        place_id:
-          title: Place Id
-          type: string
-          format: uuid
-        name:
-          title: Name
-          type: string
-        location:
-          $ref: '#/components/schemas/Point'
-        comment:
-          title: Comment
-          type: string
-    ReturnProductInRequest:
-      title: ReturnProductInRequest
-      required:
-        - id
-        - price
-        - refund_amount
-        - refund_quantity
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-        price:
-          title: Price
-          type: number
-        refund_amount:
-          title: Refund Amount
-          type: number
-        refund_quantity:
-          title: Refund Quantity
-          type: integer
-    ReturnProductsInRequest:
-      title: ReturnProductsInRequest
-      required:
-        - products
-        - return_amount
-        - new_total_amount
-        - reason
-      type: object
-      properties:
-        products:
-          title: Products
-          type: array
-          items:
-            $ref: '#/components/schemas/ReturnProductInRequest'
-        return_amount:
-          title: Return Amount
-          type: integer
-        new_total_amount:
-          title: New Total Amount
-          type: integer
-        reason:
-          title: Reason
-          type: string
-        cancel_code:
-          $ref: '#/components/schemas/OrderCancelCodeEnum'
-    SpecialSchedule:
-      title: SpecialSchedule
-      required:
-        - day
-        - time_start
-        - time_end
-        - is_work
-      type: object
-      properties:
-        day:
-          title: Day
-          type: string
-          format: date
-        time_start:
-          title: Time Start
-          type: string
-          format: time
-        time_end:
-          title: Time End
-          type: string
-          format: time
-        is_work:
-          title: Is Work
-          type: boolean
-    UpdateDeliveryInRequest:
-      title: UpdateDeliveryInRequest
-      type: object
-      properties:
-        expected_time:
-          title: Expected Time
-          type: string
-          format: date-time
-        payment_method:
-          $ref: '#/components/schemas/PaymentMethodEnum'
-        consumer_data:
-          title: Consumer Data
-          type: string
-        region:
-          title: Region
-          type: string
-        street:
-          title: Street
-          type: string
-        house_number:
-          title: House Number
-          type: string
-        flat_number:
-          title: Flat Number
-          type: string
-        entrance:
-          title: Entrance
-          type: string
-        intercom:
-          title: Intercom
-          type: string
-        floor:
-          title: Floor
-          type: string
-        address:
-          title: Address
-          type: string
-        location:
-          $ref: '#/components/schemas/Point'
-        comment:
-          title: Comment
-          type: string
-        attributes:
-          $ref: '#/components/schemas/DeliveryAttributes'
-    UpdateOrderInRequest:
-      title: UpdateOrderInRequest
-      type: object
-      properties:
-        status:
-          $ref: '#/components/schemas/OrderStatusEnum'
-        payment_status:
-          $ref: '#/components/schemas/PaymentStatusEnum'
-        cost:
-          title: Cost
-          type: number
-        additional_cost:
-          title: Additional Cost
-          type: number
-        change_cost:
-          title: Change Cost
-          type: number
-        customer_name:
-          title: Customer Name
-          type: string
-        customer_phone:
-          title: Customer Phone
-          type: string
-        customer_email:
-          title: Customer Email
-          type: string
-        person_count:
-          title: Person Count
-          type: integer
-        comment:
-          title: Comment
-          type: string
-        cancel_code:
-          $ref: '#/components/schemas/OrderCancelCodeEnum'
-        cancel_reason:
-          title: Cancel Reason
-          type: string
-        delivery:
-          $ref: '#/components/schemas/UpdateDeliveryInRequest'
-        products:
-          title: Products
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateProductInRequest'
+            $ref: "#/components/schemas/ValidationError"
+
     ValidationError:
-      title: ValidationError
-      required:
-        - loc
-        - msg
-        - type
       type: object
       properties:
         loc:
-          title: Location
           type: array
           items:
             type: string
         msg:
-          title: Message
           type: string
         type:
-          title: Error Type
           type: string
-    Vehicle:
-      title: Vehicle
-      required:
-        - license_plate
-        - model
+
+    # -------------------------
+    # ORDER SCHEMAS
+    # -------------------------
+
+    OrderDetailForResponse:
       type: object
       properties:
-        license_plate:
-          title: License Plate
+        order_id:
           type: string
-        model:
-          title: Model
+        external_id:
           type: string
-    WorkTimes:
-      title: WorkTimes
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        price:
+          type: number
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+
+    OrderItem:
       type: object
       properties:
-        regular:
-          title: Regular
-          type: array
-          items:
-            $ref: '#/components/schemas/RegularSchedule'
-        special:
-          title: Special
-          type: array
-          items:
-            $ref: '#/components/schemas/SpecialSchedule'
-    WorkTimesUpdate:
-      title: WorkTimesUpdate
-      type: object
-      properties:
-        regular:
-          title: Regular
-          type: array
-          items:
-            $ref: '#/components/schemas/RegularScheduleUpdate'
-        special:
-          title: Special
-          type: array
-          items:
-            $ref: '#/components/schemas/SpecialSchedule'
-    Zone:
-      title: Zone
-      required:
-        - zone_id
-        - geometry
-      type: object
-      properties:
-        zone_id:
-          title: Zone Id
+        product_id:
           type: string
-        costs:
-          title: Costs
+        name:
+          type: string
+        quantity:
+          type: number
+        price:
+          type: number
+
+    OrderDetailedForResponse:
+      allOf:
+        - $ref: "#/components/schemas/OrderDetailForResponse"
+        - type: object
+          properties:
+            courier:
+              $ref: "#/components/schemas/CourierInfo"
+            delivery_eta:
+              type: string
+
+    CourierInfo:
+      type: object
+      properties:
+        courier_id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        position:
+          $ref: "#/components/schemas/CourierPosition"
+
+    CourierPosition:
+      type: object
+      properties:
+        lat:
+          type: number
+        lon:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+
+    PublicCourierPositionForResponse:
+      type: object
+      properties:
+        position:
+          $ref: "#/components/schemas/CourierPosition"
+
+    OrderDryRun:
+      type: object
+      properties:
+        place_id:
+          type: string
+        items:
           type: array
           items:
-            $ref: '#/components/schemas/CostLevel'
-        sla:
-          title: Sla
+            $ref: "#/components/schemas/OrderItem"
+        address:
+          type: string
+
+    BaseSchemaResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    CancelOrderInRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    UpdateOrderInRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        comment:
+          type: string
+
+    ReturnProductsInRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              product_id:
+                type: string
+              quantity:
+                type: number
+
+    MerchantOrderStateInRequest:
+      type: object
+      properties:
+        state:
+          type: string
+        comment:
+          type: string
+
+    CreateGroupOrderInRequest:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            type: string
+        route_type:
+          type: string
+
+    GroupOrderDetailForResponse:
+      type: object
+      properties:
+        group_id:
+          type: string
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderDetailForResponse"
+
+    GroupOrderDetailedForResponse:
+      type: object
+      properties:
+        group_id:
+          type: string
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderDetailedForResponse"
+
+    OrderCheckInRequest:
+      type: object
+      properties:
+        place_id:
+          type: string
+        address:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+
+    PlaceAccessList:
+      type: object
+      properties:
+        available:
+          type: boolean
+        delivery_time_minutes:
           type: integer
-        geometry:
-          title: Geometry
-          allOf:
-            - $ref: '#/components/schemas/JsonGeometry'
-          description: kml as geojson
-          example:
-            data:
-              type: Polygon
-              coordinates:
-                - - - '10'
-                    - '10'
-                  - - '20'
-                    - '10'
-                  - - '20'
-                    - '20'
-                  - - '10'
-                    - '20'
-                  - - '10'
-                    - '10'
-                - - - '15'
-                    - '15'
-                  - - '15'
-                    - '18'
-                  - - '18'
-                    - '18'
-                  - - '18'
-                    - '15'
-                  - - '15'
-                    - '15'
+
+    # -------------------------
+    # PLACES SCHEMAS
+    # -------------------------
+
+    PlaceInDB:
+      type: object
+      properties:
+        place_id:
+          type: string
+        merchant_id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        is_active:
+          type: boolean
+
+    # -------------------------
+    # BLOCK SCHEMAS
+    # -------------------------
+
+    MerchantPlaceBlockInRequest:
+      type: object
+      properties:
+        place_ids:
+          type: array
+          items:
+            type: string
+        merchant_place_ids:
+          type: array
+          items:
+            type: string
+        reason:
+          type: string
+
+    PlaceBlockInResponse:
+      type: object
+      properties:
+        place_id:
+          type: string
+        merchant_place_id:
+          type: string
+        is_active:
+          type: boolean
+        reason:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    BlockInResponse:
+      type: object
+      properties:
+        block_id:
+          type: string
+        place_id:
+          type: string
+        merchant_place_id:
+          type: string
+        is_active:
+          type: boolean
+        reason:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # -------------------------
+    # AREAS SCHEMAS
+    # -------------------------
+
+    AreaCreatePublic:
+      type: object
+      properties:
+        merchant_place_id:
+          type: string
+        polygons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Polygon"
+
+    Polygon:
+      type: object
+      properties:
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeoPoint"
+
+    GeoPoint:
+      type: object
+      properties:
+        lat:
+          type: number
+        lon:
+          type: number
+
+    AreaInResponsePublic:
+      type: object
+      properties:
+        merchant_place_id:
+          type: string
+        polygons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Polygon"
+
+    # -------------------------
+    # SCHEDULE SCHEMAS
+    # -------------------------
+
+    WorkTimes:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkDay"
+
+    WorkDay:
+      type: object
+      properties:
+        day:
+          type: string
+        intervals:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkInterval"
+
+    WorkInterval:
+      type: object
+      properties:
+        start:
+          type: string
+        end:
+          type: string
+
+    WorkTimesUpdate:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkDay"
